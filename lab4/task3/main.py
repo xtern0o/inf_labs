@@ -1,3 +1,6 @@
+import re
+
+
 __all__ = [
     "parse_object", 
     "yaml_to_dict",
@@ -9,16 +12,14 @@ def screening(s: str) -> str:
     Экранирование служебных символов
     """
 
-    new_s = s.replace("\'", "\\'").replace('\"', '\\"')
+    new_s = s.replace('\"', '\\"')
     new_s = new_s.replace("\n", "\\n").replace("\t", "\\t")
 
     return new_s
 
 
 def parse_key(s):
-    """
-    подходит для строк вида `key:` и `key`
-    """
+    """подходит для строк вида `key:` и `key` """
     key = s
     if ':' in s:
         key = key[:-1]
@@ -29,115 +30,30 @@ def parse_key(s):
     return key
 
 
-def parse_value(value):
-    """
-    парсинг одиночных значений (например, элементов списка)
-    """
-
-    if value[0] == value[-1] and value[0] in ("'", '"'):
-        value = value[1:-1]
-    elif all(i.isdigit() for i in value):
-        value = int(value)
-    if value in ("true", "yes", "on"):
-        value = True
-    elif value in ("false", "no", "off"):
-        value = False
-    elif value == "none":
-        value = None
-
-    return value
-
-
 def parse_key_value(s):
     """подходит для строк вида: `key: 'value'` и других вида ключ-значение"""
 
     try:
         key, value = s.split(": ", 1)
 
-        value = parse_value(value)
+        if value[0] == value[-1] and value[0] in ("'", '"'):
+            value = value[1:-1]
+        elif all(i.isdigit() for i in value):
+            value = int(value)
+
+        if value == "true":
+            value = True
+        elif value == "false":
+            value = False
+        elif value == "null":
+            value = None
+
         key = parse_key(key)
         
         return key, value
     except Exception:
-        return None, s
+        return None, None
 
-
-def parse_value(value):
-    """
-    парсинг одиночных значений (например, элементов списка) ИЛИ однострочных списков
-    """
-
-    if value.strip()[0] == value.strip()[-1] and value[0] in ("'", '"'):
-        value = value[1:-1]
-    elif all(i.isdigit() for i in value):
-        value = int(value)
-    if value in ("true", "yes", "on"):
-        value = True
-    elif value in ("false", "no", "off"):
-        value = False
-    elif value == "null":
-        value = None
-    elif isinstance(value, str):
-        if value == "[" + value[1:-1] + "]":
-            value = parse_oneline_list(value)
-
-    return value
-
-
-def parse_oneline_list(s, current_i=0):
-    """
-    рекурсивная функция для парсинга однострочных списков
-    """
-    if s.startswith("[") and s.endswith("]"):
-        s = s[1:-1].strip()
-    
-    # убираем повторяющиеся пробелы после запятых (они незначащие)
-    while ",  " in s:
-        s = s.replace(",  ", ", ")
-
-    # Инициализируем переменную для хранения результата
-    result = []
-    current_element = ''
-    depth = 0  # Уровень вложенности
-
-    for char in s:
-
-        if char == '[':
-            # увеличиваем уровень вложенности
-            depth += 1
-            if depth > 1:
-                current_element += char
-
-        elif char == ']':
-            # уменьшаем уровень вложенности
-            depth -= 1
-            if depth > 0:
-                current_element += char
-            elif depth == 0:
-                # если уровень вложенности вернулся к нулю, добавляем элемент в результат
-                result.append(parse_oneline_list(current_element))
-                current_element = ''
-
-        elif char == ',':
-            # Если запятая и уровень вложенности равен 1, добавляем элемент в результат
-            if depth == 0 and current_element:
-                result.append(parse_value(current_element))
-                current_element = ''
-            else:
-                current_element += char
-
-        elif char == " " and not current_element and depth < 1:
-            continue
-
-        else:
-            current_element += char
-
-    # Добавляем последний элемент, если он есть
-    if current_element:
-        result.append(parse_value(current_element))
-
-    return result
-        
 
 # номера строк, которые уже распершены
 parsed_numbers = set()
@@ -146,13 +62,14 @@ parsed_numbers = set()
 def parse_object(lines: list, current_indent: int, current_i: int=0):
     """рекурсивная функция для парсинга объектов ключ-значение"""
 
-    # искомый объект на этом уровне
     obj_data = {}
 
-    for i in range(len(lines)):
+    i = 0
+    while i < len(lines):
 
         # перемещаемся на строку, которую еще не распарсили, пропуская уже обработанные
         if i + current_i in parsed_numbers:
+            i += 1
             continue
         
         line = lines[i].rstrip()
@@ -165,7 +82,7 @@ def parse_object(lines: list, current_indent: int, current_i: int=0):
         
         # чтение литеральных и сглаженных блоков
         # работает упрощенно: сколь угодно отступов не сделай, а пробелы в начале строк не считает
-        if lstrip_line[-1] in ("|", ">") and i + 1 < len(lines) and lstrip_line[0] != "-":
+        if re.match(r"^(?!- ).*(\||>)$", lstrip_line) and i + 1 < len(lines):
             block_data = []
             k = i + 1
             while k < len(lines):
@@ -188,9 +105,9 @@ def parse_object(lines: list, current_indent: int, current_i: int=0):
         else:
 
             # TODO: не обрабатывается одиночная однострочная послдеовательность [[[[[[[[a, b, 1]]]]]]]]
-                
+            
             # кончается на :
-            if lstrip_line.endswith(":"):
+            if re.match(r".*:$", lstrip_line):
                 key = lstrip_line[:-1]
                 indent_data = parse_object(lines[i + 1:], current_indent + 2, i + current_i + 1)
                 if lstrip_line.startswith("-"):
@@ -202,8 +119,8 @@ def parse_object(lines: list, current_indent: int, current_i: int=0):
                 
                 parsed_numbers.add(current_i + i)
 
-            # чтение элемента списка
-            elif lstrip_line.startswith("-"):
+            # элемент списка
+            elif re.match(r"- .*", lstrip_line):
 
                 # ЧАСТНЫЙ СЛУЧАЙ: Строка "-" означает разделение 
                 # между списками в конструкции вложенных списков
@@ -212,45 +129,39 @@ def parse_object(lines: list, current_indent: int, current_i: int=0):
                         obj_data = []
                     obj_data.append(parse_object(lines[i + 1:], current_indent + 2, i + current_i + 1))
 
-                    # выходим из рекурсии, ибо "следующая" строка будет "-",
-                    # во избежание некорректного вывода
-                    parsed_numbers.add(current_i + i)
-                    continue
-
+                if isinstance(obj_data, dict):
+                    obj_data = []
+                key, value = parse_key_value(lstrip_line[2:])
+                if key is not None or value is not None:
+                    changed_lines = lines.copy()
+                    changed_lines[i] = " " * current_indent + lstrip_line[2:]
+                    obj_data.append(parse_object(changed_lines[i:], current_indent, i + current_i))
                 else:
-
-                    # в любом случае это будет список
-                    if isinstance(obj_data, dict):
-                        obj_data = []
-
-                    key, value = parse_key_value(lstrip_line[2:])
-                    if key is not None:
-
-                        # на мой взгляд, удобно запустить рекурсию с измененным первым символом с "-" на пробел
-                        # так можно распарсить один объект, а после вернуть его, перейдя к следующему,
-                        # не нарушая логики вложенности
-                        changed_lines = lines.copy()
-                        changed_lines[i] = " " * current_indent + lstrip_line[2:]
-                        obj_data.append(parse_object(changed_lines[i:], current_indent, i + current_i))
-
-                    else:
-                        value = parse_value(lstrip_line[2:])
-                        obj_data.append(value)
-                    
+                    value = lstrip_line[2:]
+                    if re.match(r"'.*'|\".*\"", lstrip_line):
+                        value = value[1:-1]
+                    obj_data.append(value)
+                
                 parsed_numbers.add(current_i + i)
 
             # ключ-значение
             else:
                 key, value = parse_key_value(lstrip_line)
 
-                if key is None:
-                    # случай когда мы разделили вложенные списки строкой "-"
-                    obj_data = parse_value(value)
-                else:   
-                    if isinstance(obj_data, dict):
-                        obj_data[key] = value
-                    else:
-                        obj_data.append({key: value})
+                # чтение однострочных последовательностей
+                if isinstance(value, str):
+                    if re.match(r"\[.*\]", value):
+                        val_list = value[1:-1].strip().split(", ")
+                        for k in range(len(val_list)):
+                            val = val_list[k]
+                            if val[0] == val[-1] and val[0] in ("'", '"'):
+                                val_list[k] = val_list[k][1:-1]
+                        value = val_list
+                    
+                if isinstance(obj_data, dict):
+                    obj_data[key] = value
+                else:
+                    obj_data.append({key: value})
                 
                 parsed_numbers.add(current_i + i)
 
@@ -264,21 +175,18 @@ def parse_object(lines: list, current_indent: int, current_i: int=0):
                     next_line = lines[max(parsed_numbers) - current_i + 1]
                 else:
                     return obj_data
-
             next_indent = len(next_line) - len(next_line.lstrip())
+
             if next_line[next_indent] == "-":
                 next_indent += 2
-            
             if isinstance(obj_data, list):
                 if next_indent < current_indent:
                     return obj_data
             else:
                 if next_indent < current_indent or next_line.lstrip().startswith("-") and next_indent == current_indent:
                     return obj_data
-            
-            # частный случай сепаратора внутри вложенного списка (строка "-")
-            if next_line.strip() == "-" and next_indent <= current_indent:
-                return obj_data
+
+        i += 1
 
     return obj_data
 
@@ -359,7 +267,7 @@ def list_to_json_string(data, current_indent: int=1):
         elif isinstance(value, (int, float)):
             json_value = str(value)
         elif isinstance(value, bool):
-            json_value = ('false', 'true')[value]
+            json_value = 'true' if value else 'false'
         elif value is None:
             json_value = 'null'
         elif isinstance(value, list):
@@ -376,16 +284,14 @@ def list_to_json_string(data, current_indent: int=1):
 
 if __name__ == "__main__":
 
-    with open("data/example.yaml", mode="r", encoding="utf-8") as in_file:
+    with open("data/ci_django.yaml", mode="r", encoding="utf-8") as in_file:
         yaml_string = in_file.read()
     
     # ИЗ ЯМЛ В СЛОВАРЬ
     data = yaml_to_dict(yaml_string)
 
-    print(data)
-
     # ИЗ СЛОВАРЯ В JSON СТРОКУ
     json_dumped = dict_to_json_string(data)
 
-    with open("task1/output.json", mode="w", encoding="utf-8") as json_file:
+    with open("task3/output.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)
