@@ -1,10 +1,18 @@
-from pprint import *
-
-
 __all__ = [
     "parse_object", 
     "yaml_to_dict",
 ]
+
+
+def screening(s: str) -> str:
+    """
+    Экранирование служебных символов
+    """
+
+    new_s = s.replace("\'", "\\'").replace('\"', '\\"')
+    new_s = new_s.replace("\n", "\\n").replace("\t", "\\t")
+
+    return new_s
 
 
 def parse_key(s):
@@ -44,6 +52,7 @@ def parse_key_value(s):
         return None, None
 
 
+# номера строк, которые уже распершены
 parsed_numbers = set()
 
 
@@ -83,53 +92,63 @@ def parse_object(lines: list, current_indent: int, current_i: int=0):
             key = lstrip_line[:-3]
             obj_data[key] = block_text
 
-            parsed_numbers.add(current_i + i)
-            continue
+            parsed_numbers.add(current_i + i)           
+        
+            # далее перемещаемся сразу к проверке на выход из текущего уровня вложенности
+        else:
+
+            # TODO: не обрабатывается одиночная однострочная послдеовательность [[[[[[[[a, b, 1]]]]]]]]
                 
-        # кончается на :
-        if lstrip_line.endswith(":"):
-            key = lstrip_line[:-1]
-            indent_data = parse_object(lines[i + 1:], current_indent + 2, i + current_i + 1)
-            if lstrip_line.startswith("-"):
+            # кончается на :
+            if lstrip_line.endswith(":"):
+                key = lstrip_line[:-1]
+                indent_data = parse_object(lines[i + 1:], current_indent + 2, i + current_i + 1)
+                if lstrip_line.startswith("-"):
+                    if isinstance(obj_data, dict):
+                        obj_data = []
+                    obj_data.append({key[2:]: indent_data})
+                else:
+                    obj_data[key] = indent_data
+                
+                parsed_numbers.add(current_i + i)
+
+            # элемент списка
+            elif lstrip_line.startswith("-"):
                 if isinstance(obj_data, dict):
                     obj_data = []
-                obj_data.append({key[2:]: indent_data})
-            else:
-                obj_data[key] = indent_data
-            
-            parsed_numbers.add(current_i + i)
-
-        # элемент списка
-        elif lstrip_line.startswith("-"):
-            if isinstance(obj_data, dict):
-                obj_data = []
-            key, value = parse_key_value(lstrip_line[2:])
-            if key is not None or value is not None:
-                changed_lines = lines.copy()
-                changed_lines[i] = " " * current_indent + lstrip_line[2:]
-                obj_data.append(parse_object(changed_lines[i:], current_indent, i + current_i))
-            else:
-                value = lstrip_line[2:]
-                obj_data.append(value)
-            
-            parsed_numbers.add(current_i + i)
-
-        # ключ-значение
-        else:
-            key, value = parse_key_value(lstrip_line)
-
-            # чтение однострочных последовательностей
-            if isinstance(value, str):
-                if value == "[" + value[1:-1] + "]":
-                    value = value[1:-1].split(", ")
+                key, value = parse_key_value(lstrip_line[2:])
+                if key is not None or value is not None:
+                    changed_lines = lines.copy()
+                    changed_lines[i] = " " * current_indent + lstrip_line[2:]
+                    obj_data.append(parse_object(changed_lines[i:], current_indent, i + current_i))
+                else:
+                    value = lstrip_line[2:]
+                    if value[0] == value[-1] and value[0] in ("'", '"'):
+                        value = value[1:-1]
+                    obj_data.append(value)
                 
+                parsed_numbers.add(current_i + i)
 
-            if isinstance(obj_data, dict):
-                obj_data[key] = value
+            # ключ-значение
             else:
-                obj_data.append({key: value})
-            
-            parsed_numbers.add(current_i + i)
+                key, value = parse_key_value(lstrip_line)
+
+                # чтение однострочных последовательностей
+                if isinstance(value, str):
+                    if value == "[" + value[1:-1] + "]":
+                        val_list = value[1:-1].strip().split(", ")
+                        for k in range(len(val_list)):
+                            val = val_list[k]
+                            if val[0] == val[-1] and val[0] in ("'", '"'):
+                                val_list[k] = val_list[k][1:-1]
+                        value = val_list
+                    
+                if isinstance(obj_data, dict):
+                    obj_data[key] = value
+                else:
+                    obj_data.append({key: value})
+                
+                parsed_numbers.add(current_i + i)
 
         # условия выхода из рекурсии
         if i + 1 < len(lines):
@@ -158,6 +177,9 @@ def parse_object(lines: list, current_indent: int, current_i: int=0):
 
 
 def yaml_to_dict(s):
+    while "\n\n" in s:
+        s = s.replace("\n\n", "\n")
+
     lines = s.split("\n")
     
     # убираем пустые строки
@@ -166,24 +188,95 @@ def yaml_to_dict(s):
     # убираем закомментированные строки
     lines = list(filter(lambda l: l[0] != "#", lines)) 
 
-    # TODO: сделать работающие переносы заменой символов
-
     # искомый словарь
     data = {}
 
     data = parse_object(lines, 0)
+
     return data
+
+
+def dict_to_json_string(data, current_indent: int=1):
+    """
+    преобразует словарь в строку формата json
+    """
+
+    if isinstance(data, dict):
+        items = []
+        for key, value in data.items():
+
+            # преобразуем ключ
+            key = screening(key)
+            json_key = f'"{key}"'
+
+            # преобразуем значение
+            if isinstance(value, str):
+                if value[0] == value[-1] and value[0] in ("'", '"'):
+                    value = value[1:-1]
+                value = screening(value)
+                json_value = f'"{value}"'
+            elif isinstance(value, (int, float)):
+                json_value = str(value)
+            elif isinstance(value, bool):
+                json_value = ("false", "true")[value]
+            elif value is None:
+                json_value = "null"
+            elif isinstance(value, list):
+                json_value = list_to_json_string(value, current_indent + 1)
+            elif isinstance(value, dict):
+                json_value = dict_to_json_string(value, current_indent + 1)
+            else:
+                raise TypeError(f"Неизвестный тип: {type(value)}")
+            
+            items.append("\t" * current_indent + f"{json_key}: {json_value}")
+        
+        return "{\n" + ",\n".join(items) + "\n" + "\t" * (current_indent - 1) + "}"
+    
+    elif isinstance(data, list):
+        return list_to_json_string(data)
+    else:
+        raise TypeError(f"Неизвестный тип входных данных: {type(data)}")
+
+
+def list_to_json_string(data, current_indent: int=1):
+    """
+    преобразует список в строку формата json
+    """
+    items = []
+    for value in data:
+
+        # преобразуем значения
+        if isinstance(value, str):
+            value = screening(value)
+            json_value = f'"{value}"'
+        elif isinstance(value, (int, float)):
+            json_value = str(value)
+        elif isinstance(value, bool):
+            json_value = 'true' if value else 'false'
+        elif value is None:
+            json_value = 'null'
+        elif isinstance(value, list):
+            json_value = list_to_json_string(value, current_indent + 1)
+        elif isinstance(value, dict):
+            json_value = dict_to_json_string(value, current_indent + 1)
+        else:
+            raise TypeError(f"Неизвестный тип: {type(value)}")
+
+        items.append("\t" * current_indent + json_value)
+    return "[\n" + ",\n".join(items) + "\n" + "\t" * (current_indent - 1) + "]"
+
 
 
 if __name__ == "__main__":
 
-    with open("data/example.yaml", mode="r", encoding="utf-8") as in_file:
+    with open("data/schedule.yaml", mode="r", encoding="utf-8") as in_file:
         yaml_string = in_file.read()
     
-    while "\n\n" in yaml_string:
-        yaml_string = yaml_string.replace("\n\n", "\n")
-
-
+    # ИЗ ЯМЛ В СЛОВАРЬ
     data = yaml_to_dict(yaml_string)
 
-    pprint(data)
+    # ИЗ СЛОВАРЯ В JSON СТРОКУ
+    json_dumped = dict_to_json_string(data)
+
+    with open("task1/output.json", mode="w", encoding="utf-8") as json_file:
+        json_file.write(json_dumped)

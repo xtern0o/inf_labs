@@ -1,5 +1,1 @@
-a: |
-b: 
-- description: |
-   dsdasdasda
-     dsadasdadas
+b: [a, b, 1]
