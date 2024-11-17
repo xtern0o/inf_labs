@@ -1,3 +1,6 @@
+from pprint import *
+
+
 def screening(s: str) -> str:
     """
     Экранирование служебных символов
@@ -52,7 +55,6 @@ def parse_value(value):
         # объект вида {key: value} - и такое yaml поддерживает (x_x)
         if value == "{" + value[1:-1] + "}":
             value = value[1:-1]
-        # TODO: не работает объект с несколькими полями
         key, value = parse_key_value(value)
         if key is not None:
             return {key: value}
@@ -71,7 +73,6 @@ def parse_oneline_list(s, current_i=0):
     """
     рекурсивная функция для парсинга однострочных списков
     """
-
     if s.startswith("[") and s.endswith("]"):
         s = s[1:-1].strip()
     
@@ -123,7 +124,9 @@ parsed_numbers = set()
 
 
 def parse_object(lines: list, current_indent: int, current_i: int=0):
-    """рекурсивная функция для парсинга объектов ключ-значение"""
+    """
+    рекурсивная функция для парсинга объектов ключ-значение
+    """
 
     # искомый объект на этом уровне
     obj_data = {}
@@ -283,107 +286,49 @@ def yaml_to_dict(s):
     return data
 
 
-def dict_to_json_string(data, current_indent: int=1):
-    """
-    преобразует словарь в строку формата json
-    """
-
-    if isinstance(data, dict):
-        items = []
-        for key, value in data.items():
-
-            # преобразуем ключ
-            key = screening(key)
-            json_key = f'"{key}"'
-
-            # преобразуем значение
-            if isinstance(value, str):
-                if value[0] == value[-1] and value[0] in ("'", '"'):
-                    value = value[1:-1]
-                value = screening(value)
-                json_value = f'"{value}"'
-
-            elif isinstance(value, (int, float)):
-                # интересный факт: любой bool попадает в это условие, 
-                # поэтому оно смещено ниже, чем проверка на bool
-                json_value = str(value)
-
-            elif isinstance(value, (int, float)):
-                json_value = str(value)
-
-            elif value is None:
-                json_value = "null"
-
-            elif isinstance(value, list):
-                json_value = list_to_json_string(value, current_indent + 1)
-
-            elif isinstance(value, dict):
-                json_value = dict_to_json_string(value, current_indent + 1)
-
-            else:
-                raise TypeError(f"Неизвестный тип: {type(value)}")
-            
-            items.append("\t" * current_indent + f"{json_key}: {json_value}")
-        
-        return "{\n" + ",\n".join(items) + "\n" + "\t" * (current_indent - 1) + "}"
-    
-    elif isinstance(data, list):
-        return list_to_json_string(data)
-    else:
-        raise TypeError(f"Неизвестный тип входных данных: {type(data)}")
-
-
-def list_to_json_string(data, current_indent: int=1):
-    """
-    преобразует список в строку формата json
-    """
-    items = []
-    for value in data:
-
-        # преобразуем значения
-        if isinstance(value, str):
-            if value[0] == value[-1] and value[0] in ("'", '"'):
-                value = value[1:-1]
-            value = screening(value)
-            json_value = f'"{value}"'
-
-        elif isinstance(value, bool):
-            json_value = ('false', 'true')[value]
-
-        elif isinstance(value, (int, float)):
-            # интересный факт: любой bool попадает в это условие, 
-            # поэтому оно смещено ниже, чем проверка на bool
-            json_value = str(value)
-
-        elif value is None:
-            json_value = 'null'
-
-        elif isinstance(value, list):
-            json_value = list_to_json_string(value, current_indent + 1)
-
-        elif isinstance(value, dict):
-            json_value = dict_to_json_string(value, current_indent + 1)
-
-        else:
-            raise TypeError(f"Неизвестный тип: {type(value)}")
-
-        items.append("\t" * current_indent + json_value)
-    return "[\n" + ",\n".join(items) + "\n" + "\t" * (current_indent - 1) + "]"
-
-
 def main():
 
-    with open("data/schedule_1day.yaml", mode="r", encoding="utf-8") as in_file:
+    with open("data/schedule.yaml", mode="r", encoding="utf-8") as in_file:
             yaml_string = in_file.read()
         
     # ИЗ ЯМЛ В СЛОВАРЬ
     data = yaml_to_dict(yaml_string)
+    
+    scsv_doc = "name;day;month;year;title;class-format;type;teacher;address;classroom;begin;end\n"
+    scsv_lines = []
+    
+    for day_info in data["day"]:
+        date = day_info["date"]
 
-    # ИЗ СЛОВАРЯ В JSON СТРОКУ
-    json_dumped = dict_to_json_string(data)
+        name = day_info["name"]
+        day = date["day"]
+        month = date["month"]
+        year = date["year"]
 
-    with open("task1/output_schedule_1day.json", mode="w", encoding="utf-8") as json_file:
-        json_file.write(json_dumped)
+        schedule = day_info["schedule"]
+        for lesson in schedule:
+            title = lesson["title"]
+            class_format = lesson["class-format"]
+            address = lesson["place"]["address"]
+            classroom = lesson["place"]["classroom"]
+            teacher = lesson["teacher"]
+            begin = lesson["time"]["begin"]
+            end = lesson["time"]["end"]
+            type_ = lesson["type"]
+
+            row = [
+                name, day, month, year, title, 
+                class_format, type_, teacher, 
+                address, classroom, begin, end,
+            ]
+
+            line = ";".join(list(map(str, row)))
+            scsv_lines.append(line)
+    
+    scsv_doc += "\n".join(scsv_lines)
+
+    with open("task6/output.csv", mode="w", encoding="utf-8") as out_file:
+        out_file.write(scsv_doc)
 
 
 if __name__ == "__main__":
