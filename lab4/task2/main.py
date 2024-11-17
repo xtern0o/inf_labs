@@ -4,7 +4,7 @@ import yaml
 
 if __name__ == "__main__":
 
-    with open("data/example.yaml", mode="r", encoding="utf-8") as in_file:
+    with open("data/schedule.yaml", mode="r", encoding="utf-8") as in_file:
         data = yaml.safe_load(in_file)
 
     with open("task2/output.json", mode="w", encoding="utf-8") as json_file:
