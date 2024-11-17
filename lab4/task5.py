@@ -18,7 +18,7 @@ def timer(func, n=1):
 
 
 for name, func in [
-    ("task1", task1_main),
+    ("task1       ", task1_main),
     ("task2 (dop1)", task2_main),
     ("task3 (dop2)", task3_main),
     ("task4 (dop3)", task4_main),

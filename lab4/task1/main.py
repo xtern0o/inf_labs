@@ -49,7 +49,6 @@ def parse_value(value):
         value = int(value)
     else:
         # частный случай однострочного объекта
-        
         # объект вида {key: value} - и такое yaml поддерживает (x_x)
         if value == "{" + value[1:-1] + "}":
             value = value[1:-1]
@@ -373,18 +372,17 @@ def list_to_json_string(data, current_indent: int=1):
 def main():
 
     with open("data/schedule_1day.yaml", mode="r", encoding="utf-8") as in_file:
-        yaml_string = in_file.read()
-    
+            yaml_string = in_file.read()
+        
     # ИЗ ЯМЛ В СЛОВАРЬ
     data = yaml_to_dict(yaml_string)
 
     # ИЗ СЛОВАРЯ В JSON СТРОКУ
     json_dumped = dict_to_json_string(data)
 
-    with open("task1/output_schedule_1day.json", mode="w", encoding="utf-8") as json_file:
+    with open("task4/output_schedule_1day.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)
 
 
 if __name__ == "__main__":
     main()
-    

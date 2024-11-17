@@ -384,6 +384,5 @@ def main():
         json_file.write(json_dumped)
 
 
-
 if __name__ == "__main__":
     main()
