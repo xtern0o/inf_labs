@@ -379,7 +379,7 @@ def list_to_json_string(data, current_indent: int=1):
 
 if __name__ == "__main__":
 
-    with open("data/schedule.yaml", mode="r", encoding="utf-8") as in_file:
+    with open("data/schedule_1day.yaml", mode="r", encoding="utf-8") as in_file:
         yaml_string = in_file.read()
     
     # ИЗ ЯМЛ В СЛОВАРЬ

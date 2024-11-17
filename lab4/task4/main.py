@@ -55,7 +55,6 @@ def parse_value(value):
         value = int(value)
     else:
         # частный случай однострочного объекта
-        
         # объект вида {key: value} - и такое yaml поддерживает (x_x)
         if value == "{" + value[1:-1] + "}":
             value = value[1:-1]

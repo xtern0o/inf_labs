@@ -1,136 +1,57 @@
 {
-    "day": [
-        {
-            "name": "среда",
-            "date": {
-                "day": 6,
-                "month": "ноябрь",
-                "year": 2024
-            },
-            "schedule": [
-                {
-                    "title": "Информатика",
-                    "class-format": "очно",
-                    "type": "лекция",
-                    "teacher": "Балакшин Павел Валерьевич",
-                    "place": {
-                        "address": "ул.Ломоносова, д.9, лит. М",
-                        "classroom": "Актовый зал (1216/0 (усл))"
-                    },
-                    "time": {
-                        "begin": "8:20",
-                        "end": "9:50"
-                    }
-                },
-                {
-                    "title": "Основы профессиональной деятельности",
-                    "class-format": "очно",
-                    "type": "лекция",
-                    "teacher": "Клименков Сергей Викторович",
-                    "place": {
-                        "address": "ул.Ломоносова, д.9, лит. М",
-                        "classroom": "Актовый зал (1216/0 (усл))"
-                    },
-                    "time": {
-                        "begin": "10:00",
-                        "end": "11:30"
-                    }
-                },
-                {
-                    "title": "Информатика",
-                    "class-format": "очно",
-                    "type": "лабораторная",
-                    "teacher": "Малышева Татьяна Алексеевна",
-                    "place": {
-                        "address": "Кронверкский пр., д.49, лит.А",
-                        "classroom": "1338"
-                    },
-                    "time": {
-                        "begin": "13:30",
-                        "end": "15:00"
-                    }
-                },
-                {
-                    "title": "Информатика",
-                    "class-format": "очно",
-                    "type": "лабораторная",
-                    "teacher": "Малышева Татьяна Алексеевна",
-                    "place": {
-                        "address": "Кронверкский пр., д.49, лит.А",
-                        "classroom": "1338"
-                    },
-                    "time": {
-                        "begin": "15:20",
-                        "end": "16:50"
-                    }
-                }
+    "name": "Django CI",
+    "true": {
+        "push": {
+            "branches": [
+                "main"
             ]
         },
-        {
-            "name": "пятница",
-            "date": {
-                "day": 8,
-                "month": "ноябрь",
-                "year": 2024
+        "pull_request": {
+            "branches": [
+                "main"
+            ]
+        }
+    },
+    "jobs": {
+        "build": {
+            "runs-on": "ubuntu-latest",
+            "strategy": {
+                "max-parallel": 4,
+                "matrix": {
+                    "python-version": [
+                        3.8,
+                        3.9
+                    ]
+                }
             },
-            "schedule": [
+            "steps": [
                 {
-                    "title": "Математический анализ (продвинутый уровень)",
-                    "class-format": "очно",
-                    "type": "практика",
-                    "teacher": "Старков Александр Сергеевич",
-                    "place": {
-                        "address": "Кронверкский пр., д.49, лит.А",
-                        "classroom": "2337"
-                    },
-                    "time": {
-                        "begin": "8:20",
-                        "end": "9:50"
+                    "uses": "actions/checkout@v3"
+                },
+                {
+                    "name": "Set up Python ${{ matrix.python-version }}",
+                    "uses": "actions/setup-python@v3",
+                    "with": {
+                        "python-version": "${{ matrix.python-version }}"
                     }
                 },
                 {
-                    "title": "Математический анализ (продвинутый уровень)",
-                    "class-format": "очно",
-                    "type": "практика",
-                    "teacher": "Старков Александр Сергеевич",
-                    "place": {
-                        "address": "Кронверкский пр., д.49, лит.А",
-                        "classroom": "2337"
-                    },
-                    "time": {
-                        "begin": "10:00",
-                        "end": "11:30"
-                    }
+                    "name": "Install Dependencies",
+                    "run": "python -m pip install --upgrade pip\npip install -r requirements/dev.txt\npip install -r requirements/prod.txt\npip install -r requirements/test.txt\n"
                 },
                 {
-                    "title": "Английский язык B2",
-                    "class-format": "очно",
-                    "type": "практика",
-                    "teacher": "Соловьева Анна Сергеевна",
-                    "place": {
-                        "address": "Ауд. 3302, ул.Ломоносова, д.9, лит. Е",
-                        "classroom": "3302"
-                    },
-                    "time": {
-                        "begin": "15:20",
-                        "end": "16:50"
-                    }
+                    "name": "Run Tests",
+                    "run": "cd testpad\npython manage.py test\n"
                 },
                 {
-                    "title": "Английский язык B2",
-                    "class-format": "очно",
-                    "type": "практика",
-                    "teacher": "Соловьева Анна Сергеевна",
-                    "place": {
-                        "address": "Ауд. 3302, ул.Ломоносова, д.9, лит. Е",
-                        "classroom": "3302"
-                    },
-                    "time": {
-                        "begin": "17:00",
-                        "end": "18:30"
-                    }
+                    "name": "flake8-linting",
+                    "run": "flake8 --verbose --exclude=migrations --config \"setup.cfg\"\n"
+                },
+                {
+                    "name": "black-linting",
+                    "run": "black --check --verbose --config pyproject.toml ."
                 }
             ]
         }
-    ]
+    }
 }
