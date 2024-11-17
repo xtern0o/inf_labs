@@ -381,7 +381,7 @@ def list_to_json_string(data, current_indent: int=1):
 
 if __name__ == "__main__":
 
-    with open("data/ci_django.yaml", mode="r", encoding="utf-8") as in_file:
+    with open("data/schedule_1day.yaml", mode="r", encoding="utf-8") as in_file:
         yaml_string = in_file.read()
     
     # ИЗ ЯМЛ В СЛОВАРЬ
@@ -390,5 +390,5 @@ if __name__ == "__main__":
     # ИЗ СЛОВАРЯ В JSON СТРОКУ
     json_dumped = dict_to_json_string(data)
 
-    with open("task3/output.json", mode="w", encoding="utf-8") as json_file:
+    with open("task3/output_schedule_1day.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)

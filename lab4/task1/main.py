@@ -388,5 +388,5 @@ if __name__ == "__main__":
     # ИЗ СЛОВАРЯ В JSON СТРОКУ
     json_dumped = dict_to_json_string(data)
 
-    with open("task1/output.json", mode="w", encoding="utf-8") as json_file:
+    with open("task1/output_schedule_1day.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)
