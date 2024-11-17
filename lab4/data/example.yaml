@@ -1,1 +1,1 @@
-a: [{a: b}, b]
+person: {name: John, age: 30, city: New York}

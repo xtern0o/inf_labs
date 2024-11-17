@@ -1,12 +1,6 @@
 import re
 
 
-__all__ = [
-    "parse_object", 
-    "yaml_to_dict",
-]
-
-
 def screening(s: str) -> str:
     """
     Экранирование служебных символов
@@ -378,12 +372,11 @@ def list_to_json_string(data, current_indent: int=1):
     return "[\n" + ",\n".join(items) + "\n" + "\t" * (current_indent - 1) + "]"
 
 
-
-if __name__ == "__main__":
+def main():
 
     with open("data/schedule_1day.yaml", mode="r", encoding="utf-8") as in_file:
-        yaml_string = in_file.read()
-    
+            yaml_string = in_file.read()
+        
     # ИЗ ЯМЛ В СЛОВАРЬ
     data = yaml_to_dict(yaml_string)
 
@@ -392,3 +385,8 @@ if __name__ == "__main__":
 
     with open("task3/output_schedule_1day.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)
+
+
+
+if __name__ == "__main__":
+    main()
