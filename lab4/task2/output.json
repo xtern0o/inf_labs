@@ -1,13 +1,18 @@
 [
+    "a",
     [
-        2,
-        "element2",
-        true
+        [
+            "b",
+            [
+                [
+                    {
+                        "a": "a"
+                    }
+                ]
+            ]
+        ]
     ],
     [
-        "list_level_2",
-        "element1",
-        "element2",
-        "element3"
+        "d"
     ]
 ]

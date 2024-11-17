@@ -55,8 +55,10 @@ def parse_value(value):
         value = int(value)
     else:
         # частный случай однострочного объекта
-        # условие создано в частности для объектов,
-        # вложенных в однострочный список
+        
+        # объект вида {key: value} - и такое yaml поддерживает (x_x)
+        if value == "{" + value[1:-1] + "}":
+            value = value[1:-1]
         key, value = parse_key_value(value)
         if key is not None:
             return {key: value}
@@ -365,10 +367,8 @@ if __name__ == "__main__":
     # ИЗ ЯМЛ В СЛОВАРЬ
     data = yaml_to_dict(yaml_string)
 
-    print(data)
-
     # ИЗ СЛОВАРЯ В JSON СТРОКУ
     json_dumped = dict_to_json_string(data)
 
-    with open("task1/output.json", mode="w", encoding="utf-8") as json_file:
+    with open("task4/output.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)
