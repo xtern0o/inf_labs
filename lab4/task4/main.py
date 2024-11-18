@@ -29,13 +29,13 @@ def parse_key_value(s):
     try:
         key, value = s.split(": ", 1)
 
-        value = parse_value(value)
-        key = parse_key(key)
-
         if key[0] == "{" and value[-1] == "}":
             key = key[1:]
             value = value[:-1]
-        
+
+        value = parse_value(value)
+        key = parse_key(key)
+
         return key, value
     except Exception:
         return None, s
@@ -55,11 +55,13 @@ def parse_value(value):
         # частный случай однострочного объекта
         # объект вида {key: value} - и такое yaml поддерживает (x_x)
         if value == "{" + value[1:-1] + "}":
-            value = value[1:-1]
-        # TODO: не работает объект с несколькими полями
-        key, value = parse_key_value(value)
-        if key is not None:
-            return {key: value}
+            # value = value[1:-1]
+            value = parse_oneline_object(value)
+            return value
+        else:
+            key, value = parse_key_value(value)
+            if key is not None:
+                return {key: value}
     
     if value in ("true", "yes", "on"):
         value = True
@@ -71,7 +73,7 @@ def parse_value(value):
     return value
 
 
-def parse_oneline_list(s, current_i=0):
+def parse_oneline_list(s):
     """
     рекурсивная функция для парсинга однострочных списков
     """
@@ -88,7 +90,7 @@ def parse_oneline_list(s, current_i=0):
     current_element = ''
     depth = 0  # Уровень вложенности
 
-    for i, char in enumerate(s):
+    for char in s:
 
         if char == '[':
             # увеличиваем уровень вложенности
@@ -120,6 +122,63 @@ def parse_oneline_list(s, current_i=0):
         result.append(parse_value(current_element))
 
     return result
+
+
+def parse_oneline_object(s):
+    """
+    функция для парсинга однострочных объектов вида {key: val, {kk: vv}}
+    """
+
+    if s.startswith("{") and s.endswith("}"):
+        s = s[1:-1].strip()
+    
+    # убираем повторяющиеся пробелы после запятых (они незначащие)
+    while ",  " in s:
+        s = s.replace(",  ", ", ")
+    
+    result = {}
+    current_element = ''
+    depth = 0
+
+    key = ''
+
+    for char in s:
+
+        if char == "{":
+            current_element += char
+            depth += 1
+        
+        elif char == "}":
+            depth -= 1
+            current_element += char
+        
+        elif char == "," and depth == 0:
+            if current_element:
+                if key:
+                    result[key] = parse_value(current_element)
+                    key = ''
+                    current_element = ''
+        
+        elif char == ":" and depth == 0:
+            if current_element:
+                key = parse_key(current_element)
+                current_element = ''
+            
+        
+        # {key: {k1: v1, k2: v2}}
+        
+        elif char == " " and not current_element and depth < 1:
+            continue
+        
+        else:
+            current_element += char
+    
+    if current_element:
+        result[key] = parse_value(current_element)
+    
+    return result
+    
+
         
 
 # номера строк, которые уже распершены
@@ -377,7 +436,7 @@ def list_to_json_string(data, current_indent: int=1):
 
 def main():
 
-    with open("data/example.yaml", mode="r", encoding="utf-8") as in_file:
+    with open("data/ci_django.yaml", mode="r", encoding="utf-8") as in_file:
             yaml_string = in_file.read()
         
     # ИЗ ЯМЛ В СЛОВАРЬ
@@ -386,7 +445,7 @@ def main():
     # ИЗ СЛОВАРЯ В JSON СТРОКУ
     json_dumped = dict_to_json_string(data)
 
-    with open("task1/example_output.json", mode="w", encoding="utf-8") as json_file:
+    with open("task4/ouput_ci_django.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)
 
 

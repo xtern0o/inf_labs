@@ -90,6 +90,8 @@ def parse_oneline_list(s):
     current_element = ''
     depth = 0  # Уровень вложенности
 
+    obj_depth = 0
+
     for char in s:
 
         if char == '[':
@@ -101,8 +103,16 @@ def parse_oneline_list(s):
             # уменьшаем уровень вложенности
             depth -= 1
             current_element += char
+        
+        elif char == "{":
+            obj_depth += 1
+            current_element += char
+        
+        elif char == "}":
+            obj_depth -= 1
+            current_element += char
 
-        elif char == ',':
+        elif char == ',' and not obj_depth:
             # Если запятая и уровень вложенности равен 1, добавляем элемент в результат
             if depth == 0:
                 if current_element:
@@ -445,7 +455,7 @@ def main():
     # ИЗ СЛОВАРЯ В JSON СТРОКУ
     json_dumped = dict_to_json_string(data)
 
-    with open("task1/ouput_ci_django.json", mode="w", encoding="utf-8") as json_file:
+    with open("task1/output_ci_django.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)
 
 
