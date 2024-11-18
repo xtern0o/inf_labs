@@ -31,6 +31,10 @@ def parse_key_value(s):
 
         value = parse_value(value)
         key = parse_key(key)
+
+        if key[0] == "{" and value[-1] == "}":
+            key = key[1:]
+            value = value[:-1]
         
         return key, value
     except Exception:
@@ -52,6 +56,7 @@ def parse_value(value):
         # объект вида {key: value} - и такое yaml поддерживает (x_x)
         if value == "{" + value[1:-1] + "}":
             value = value[1:-1]
+        # TODO: не работает объект с несколькими полями
         key, value = parse_key_value(value)
         if key is not None:
             return {key: value}
@@ -70,6 +75,7 @@ def parse_oneline_list(s, current_i=0):
     """
     рекурсивная функция для парсинга однострочных списков
     """
+
     if s.startswith("[") and s.endswith("]"):
         s = s[1:-1].strip()
     
@@ -371,7 +377,7 @@ def list_to_json_string(data, current_indent: int=1):
 
 def main():
 
-    with open("data/schedule_1day.yaml", mode="r", encoding="utf-8") as in_file:
+    with open("data/example.yaml", mode="r", encoding="utf-8") as in_file:
             yaml_string = in_file.read()
         
     # ИЗ ЯМЛ В СЛОВАРЬ
@@ -380,7 +386,7 @@ def main():
     # ИЗ СЛОВАРЯ В JSON СТРОКУ
     json_dumped = dict_to_json_string(data)
 
-    with open("task4/output_schedule_1day.json", mode="w", encoding="utf-8") as json_file:
+    with open("task1/example_output.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)
 
 
