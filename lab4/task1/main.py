@@ -289,8 +289,8 @@ def parse_object(lines: list, current_indent: int, current_i: int=0):
                 
             parsed_numbers.add(current_i + i)
 
-        # ключ-значение
-        else:
+        # ключ-значение или однострочные конструкции
+        else:   
             if lstrip_line[0] == "[" and lstrip_line[-1] == "]":
                 obj_data = parse_oneline_list(lstrip_line)
             else:                    
@@ -346,7 +346,7 @@ def yaml_to_dict(s):
     lines = list(filter(lambda l: l and not all(c == " " for c in l), lines))
 
     # убираем закомментированные строки
-    lines = list(filter(lambda l: l[0] != "#", lines)) 
+    lines = list(filter(lambda l: l.lstrip()[0] != "#", lines)) 
 
     # искомый словарь
     data = {}
@@ -446,7 +446,7 @@ def list_to_json_string(data, current_indent: int=1):
 
 def main():
 
-    with open("data/ci_django.yaml", mode="r", encoding="utf-8") as in_file:
+    with open("data/schedule.yaml", mode="r", encoding="utf-8") as in_file:
             yaml_string = in_file.read()
         
     # ИЗ ЯМЛ В СЛОВАРЬ
@@ -455,7 +455,7 @@ def main():
     # ИЗ СЛОВАРЯ В JSON СТРОКУ
     json_dumped = dict_to_json_string(data)
 
-    with open("task1/output_ci_django.json", mode="w", encoding="utf-8") as json_file:
+    with open("task1/schedule_2days.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)
 
 

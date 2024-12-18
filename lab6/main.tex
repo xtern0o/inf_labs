@@ -1,0 +1,42 @@
+\documentclass[12pt, a4paper, twocolumn, twoside]{article}
+
+\usepackage[top=2cm, bottom=2cm, left=3cm, right=3cm]{geometry}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage[english, russian]{babel}
+\usepackage{tempora}            % TNR для кириллицы
+\usepackage{amsmath}            % мат. окружение align
+\usepackage{amssymb}            % мат. символы
+\usepackage{fancyhdr}           % колонтитулы
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+
+\setcounter{page}{14}
+
+\fancyhf{}
+\fancyfoot[LE,RO]{\textbf{\thepage}}
+\pagestyle{fancy}
+
+\setlength{\parindent}{2em}         % красная строка
+\setlength{\arrayrulewidth}{0.5mm}  % толщина границ таблицы
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote})\space\space}
+\renewcommand{\headrulewidth}{0pt} % убираем линии на колонтитулах
+\renewcommand{\footrulewidth}{0pt}
+
+
+
+\begin{document}
+
+\input{front_page}
+\newpage
+\input{page1}
+% \newpage
+\input{page2}
+\newpage
+
+\end{document}

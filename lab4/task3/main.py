@@ -40,6 +40,61 @@ def parse_key_value(s):
         return None, s
 
 
+def parse_oneline_object(s):
+    """
+    функция для парсинга однострочных объектов вида {key: val, {kk: vv}}
+    """
+
+    if re.match(r"^\{.*\}$", s):
+        s = s[1:-1].strip()
+    
+    # убираем повторяющиеся пробелы после запятых (они незначащие)
+    while ",  " in s:
+        s = s.replace(",  ", ", ")
+    
+    result = {}
+    current_element = ''
+    depth = 0
+
+    key = ''
+
+    for char in s:
+
+        if char == "{":
+            current_element += char
+            depth += 1
+        
+        elif char == "}":
+            depth -= 1
+            current_element += char
+        
+        elif char == "," and depth == 0:
+            if current_element:
+                if key:
+                    result[key] = parse_value(current_element)
+                    key = ''
+                    current_element = ''
+        
+        elif char == ":" and depth == 0:
+            if current_element:
+                key = parse_key(current_element)
+                current_element = ''
+            
+        
+        # {key: {k1: v1, k2: v2}}
+        
+        elif char == " " and not current_element and depth < 1:
+            continue
+        
+        else:
+            current_element += char
+    
+    if current_element:
+        result[key] = parse_value(current_element)
+    
+    return result
+    
+
 def parse_value(value):
     """
     парсинг одиночных значений (например, элементов списка) ИЛИ однострочных списков
@@ -51,10 +106,13 @@ def parse_value(value):
     elif all(i.isdigit() for i in value):
         value = int(value)
     else:
+       
         # частный случай однострочного объекта
         # объект вида {key: value} - и такое yaml поддерживает (x_x)
         if re.match(r"^\{.*\}$", value):
-            value = value[1:-1]
+            value = parse_oneline_object(value)
+            return value
+        
         key, value = parse_key_value(value)
         if key is not None:
             return {key: value}
@@ -85,7 +143,9 @@ def parse_oneline_list(s, current_i=0):
     current_element = ''
     depth = 0  # Уровень вложенности
 
-    for i, char in enumerate(s):
+    obj_depth = 0
+
+    for char in s:
 
         if char == '[':
             # увеличиваем уровень вложенности
@@ -96,8 +156,16 @@ def parse_oneline_list(s, current_i=0):
             # уменьшаем уровень вложенности
             depth -= 1
             current_element += char
+        
+        elif char == "{":
+            obj_depth += 1
+            current_element += char
+        
+        elif char == "}":
+            obj_depth -= 1
+            current_element += char
 
-        elif char == ',':
+        elif char == ',' and not obj_depth:
             # Если запятая и уровень вложенности равен 1, добавляем элемент в результат
             if depth == 0:
                 if current_element:
@@ -383,7 +451,7 @@ def main():
     # ИЗ СЛОВАРЯ В JSON СТРОКУ
     json_dumped = dict_to_json_string(data)
 
-    with open("task3/output_schedule_1day.json", mode="w", encoding="utf-8") as json_file:
+    with open("task3/schedule_1day.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)
 
 

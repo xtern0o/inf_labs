@@ -29,6 +29,8 @@ def parse_key_value(s):
     try:
         key, value = s.split(": ", 1)
 
+        # если мы обрабатываем однострочный объект,
+        # то нужно обрезать внешние фиг. скобки
         if key[0] == "{" and value[-1] == "}":
             key = key[1:]
             value = value[:-1]
@@ -90,6 +92,8 @@ def parse_oneline_list(s):
     current_element = ''
     depth = 0  # Уровень вложенности
 
+    obj_depth = 0
+
     for char in s:
 
         if char == '[':
@@ -102,7 +106,18 @@ def parse_oneline_list(s):
             depth -= 1
             current_element += char
 
-        elif char == ',':
+        # частный случай вложенного объекта
+        # рассмотриваем как отдельную вложенность,
+        # чтобы не было проблем с запятыми        
+        elif char == "{":
+            obj_depth += 1
+            current_element += char
+        
+        elif char == "}":
+            obj_depth -= 1
+            current_element += char
+
+        elif char == ',' and not obj_depth:
             # Если запятая и уровень вложенности равен 1, добавляем элемент в результат
             if depth == 0:
                 if current_element:
@@ -178,8 +193,6 @@ def parse_oneline_object(s):
     
     return result
     
-
-        
 
 # номера строк, которые уже распершены
 parsed_numbers = set()
@@ -436,7 +449,7 @@ def list_to_json_string(data, current_indent: int=1):
 
 def main():
 
-    with open("data/ci_django.yaml", mode="r", encoding="utf-8") as in_file:
+    with open("data/schedule_1day.yaml", mode="r", encoding="utf-8") as in_file:
             yaml_string = in_file.read()
         
     # ИЗ ЯМЛ В СЛОВАРЬ
@@ -445,7 +458,7 @@ def main():
     # ИЗ СЛОВАРЯ В JSON СТРОКУ
     json_dumped = dict_to_json_string(data)
 
-    with open("task4/ouput_ci_django.json", mode="w", encoding="utf-8") as json_file:
+    with open("task4/schedule_1day.json", mode="w", encoding="utf-8") as json_file:
         json_file.write(json_dumped)
 
 

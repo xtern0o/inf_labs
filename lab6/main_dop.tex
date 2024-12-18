@@ -1,0 +1,207 @@
+% \thispagestyle{empty}
+
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[top=3cm, bottom=2.5cm, left=2cm, right=2cm, headsep=1.25cm]{geometry}
+\usepackage{lipsum}                     % lorem ipsum
+\usepackage{graphicx}                   % изображения
+\usepackage[english, russian]{babel}    % русская локализация
+\usepackage{caption}
+\usepackage{anyfontsize}
+\usepackage{wrapfig}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{mathtools}
+\usepackage{fancyhdr}
+
+\setcounter{page}{59}
+
+% МОИ КРАСИВЫЕ ЦВЕТА.
+\definecolor{darkblue}{HTML}{265999}
+\definecolor{oryellow}{HTML}{f3b319}
+\definecolor{myred}{HTML}{d94c19}
+
+% Создание НЕПОВТОРИМОГО колонтитула
+\pagestyle{fancy}   % применение fancy стилей к странице
+\fancyhf{}  % очистка всех хедеров и футеров
+\fancyhead[L]{
+    \begin{minipage}{0.64\textwidth}
+        \hfill КНИГА I ПРЕДЛ. XXXIV. ТЕОРЕМА \hfill{\raisebox{-0.3em}{\thepage}}
+    \end{minipage}
+}
+\fancy  % применение.
+\renewcommand{\headrulewidth}{0pt}  % делаем линию колонтитула невидимой
+
+% Макросы
+\newcommand{\slet}[1]{{\tiny \sffamily #1}} % для стилизации названий геометрических точек 
+\newcommand{\lwh}{2pt}
+
+% определение стиля узлов по умолчанию
+\tikzset{every node/.style={inner sep=2pt}}
+
+\begin{document}
+
+\begin{minipage}[t]{0.6\textwidth}
+    \begin{minipage}{\textwidth}
+        \begin{wrapfigure}{l}{0.18\linewidth}
+            \vspace{-\baselineskip}
+            \includegraphics[width=2cm]{PLetter.png}
+        \end{wrapfigure}
+        ротивоположные \textit{стороны и углы параллелограмма равны, а диагональ}
+        \tikz[baseline=-0.3em]{
+            \draw[black, line width=\lwh] (0,0) -- (1,0)
+            \node[above] at (0,0) {\slet{A}}
+            \node[above] at (1,0) {\slet{D}}
+        }
+        \textit{делит его на две равные части.}
+    \end{minipage}
+    
+    \vspace{1cm}
+    
+    \begin{center}
+        Поскольку 
+        \begin{Bmatrix}
+            \tikz[baseline=-1em]{
+                \draw[darkblue, fill=darkblue] (0,0) -- (0:0.7) arc (0:-60:0.7) -- cycle;
+                \node[above left] at (0,0) {\slet{A}};
+                \node[right] at (0:0.7) {\slet{B}};
+                \node[below] at (-60:0.7) {\slet{D}};
+            } =
+            \tikz[baseline=0.5em]{
+                \draw[oryellow, fill=oryellow] (0,0) -- (0:-0.7) arc (180:120:0.7) -- cycle;
+                \node[left] at (0:-0.7) {\slet{C}};
+                \node[above left] at (120:0.7) {\slet{A}};
+                \node[below right] at (0,0) {\slet{D}};
+            } \\
+            \tikz[baseline=-1em]{
+                \draw[myred, fill=myred] (0,0) -- (-60:0.7) arc (-60:-105:0.7) -- cycle;
+                \node[above] at (0,0) {\slet{A}};
+                \node[below left] at (-105:0.7) {\slet{C}};
+                \node[below right] at (-60:0.7) {\slet{D}};
+            } = 
+            \tikz[baseline=0.5em]{
+                \draw[myred, fill=myred] (0,0) -- (75:0.7) arc (75:120:0.7) -- cycle;
+                \node[below] at (0,0) {\slet{D}};
+                \node[above left] at (120:0.7) {\slet{A}};
+                \node[above right] at (75:0.7) {\slet{B}};
+            }
+        \end{Bmatrix}
+        (пр. I.29) \\
+        
+        \vspace{5pt}
+        и \tikz{
+            \draw[black, line width=\lwh] (0,0) -- (1,0);
+            \node[above] at (0,0) {\slet{A}};
+            \node[above] at (1,0) {\slet{D}};
+        } общая обоим треугольникам. \\
+        
+        \vspace{0.5cm}
+        \therefore \begin{Bmatrix}
+            \tikz{
+                \draw[myred, line width=\lwh] (0,0) -- (1,0)
+                \node[above] at (0,0) {\slet{A}}
+                \node[above] at (1,0) {\slet{B}}
+            } = 
+            \tikz{
+                \draw[myred, line width=\lwh, dashed] (0,0) -- (1,0)
+                \node[above] at (0,0) {\slet{C}}
+                \node[above] at (1,0) {\slet{D}}
+            } \\
+            \tikz{
+                \draw[oryellow, line width=\lwh] (0,0) -- (1,0)
+                \node[above] at (0,0) {\slet{A}}
+                \node[above] at (1,0) {\slet{C}}
+            } = 
+            \tikz{
+                \draw[darkblue, line width=\lwh, dashed] (0,0) -- (1,0)
+                \node[above] at (0,0) {\slet{B}}
+                \node[above] at (1,0) {\slet{D}}
+            } \\
+            \tikz[baseline=-1em]{
+                \draw[black, fill=black] (0,0) -- (180:0.7) arc (180:255:0.7) -- cycle;
+                \node[left] at (180:0.7) {\slet{A}}
+                \node[below left] at (255:0.7) {\slet{D}}
+                \node[above right] at (0,0) {\slet{B}}
+            } = 
+            \tikz[baseline=0.5em]{
+                \draw[black, fill=black] (0,0) -- (0:0.7) arc (0:75:0.7) -- cycle;
+                \node[right] at (0:0.7) {\slet{D}}
+                \node[above right] at (75:0.7) {\slet{A}}
+                \node[below left] at (0,0) {\slet{C}}
+            }
+        \end{Bmatrix}
+        (пр. I.26) \\
+        и \tikz[baseline=-1em]{
+            \draw[myred, fill=myred] (0,0) -- (-60:0.7) arc (-60:-105:0.7) -- cycle;
+            \draw[darkblue, fill=darkblue] (0,0) -- (0:0.7) arc (0:-60:0.7) -- cycle;
+            \node[above left] at (0,0) {\slet{A}};
+            \node[right] at (0:0.7) {\slet{B}};
+            \node[below left] at (-105:0.7) {\slet{C}};
+        } = 
+        \tikz[baseline=0.5em]{
+            \draw[oryellow, fill=oryellow] (0,0) -- (0:-0.7) arc (180:120:0.7) -- cycle;
+            \draw[myred, fill=myred] (0,0) -- (75:0.7) arc (75:120:0.7) -- cycle;
+            \node[below] at (0,0) {\slet{D}};
+            \node[above right] at (75:0.7) {\slet{B}};
+            \node[left] at (0:-0.7) {\slet{C}};
+        }
+        (акс. II)
+    \end{center}
+    \hspace{2em} Следовательно, противоположные стороны и углы параллелограмма равны. И, поскольку треугольники 
+    \tikz[baseline=1.4em]{
+        \draw[myred, line width=\lwh, dashed] (0,0) -- (1,0)
+        \draw[oryellow, line width=\lwh] (0,0) -- (0.3,1.2)
+        \draw[black, line width=\lwh] (0.3,1.2) -- (1,0)
+        \node[below left] at (0,0) {\slet{C}}
+        \node[below right] at (1,0) {\slet{D}}
+        \node[above] at (0.3,1.2) {\slet{A}}
+    } и 
+    \tikz[baseline=-1.6em]{
+        \draw[black, line width=\lwh] (0,0) -- (0.7,-1.2)
+        \draw[myred, line width=\lwh] (0,0) -- (1,0)
+        \draw[darkblue, line width=\lwh] (1,0) -- (0.7,-1.2)
+        \node[above left] at (0,0) {\slet{A}}
+        \node[above right] at (1,0) {\slet{B}}
+        \node[below] at (0.7,-1.2) {\slet{D}}
+    }
+    равны во всех отношениях (пр. I.4), диагональ делит параллелограмм на две равные части.
+    \begin{flushright}
+        ч. т. д.
+    \end{flushright}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.3\textwidth}
+    \hfill \\
+    
+    \vspace{-1.5cm}
+    \tikz{
+        \coordinate (A) at (0.9, 3.6)
+        \coordinate (B) at (3.9, 3.6)
+        \coordinate (C) at (0, 0)
+        \coordinate (D) at (3, 0)
+    
+        \draw[black, fill=black] (C) -- ++(0:0.7) arc (0:75:0.7) -- cycle;
+        \draw[myred, fill=myred] (A) -- ++(-60:0.7) arc (-60:-105:0.7) -- cycle;
+        \draw[darkblue, fill=darkblue] (A) -- ++(0:0.7) arc (0:-60:0.7) -- cycle;
+        \draw[myred, fill=myred] (D) -- ++(75:0.7) arc (75:120:0.7) -- cycle;
+        \draw[black, fill=black] (B) -- ++(180:0.7) arc (180:255:0.7) -- cycle;
+        \draw[oryellow, fill=oryellow] (D) -- ++(0:-0.7) arc (180:120:0.7) -- cycle;
+
+        \draw[black, line width=\lwh] (A) -- (D)
+        \draw[myred, line width=\lwh, dashed] (C) -- (D)
+        \draw[oryellow, line width=\lwh] (C) -- (A)
+        \draw[darkblue, line width=\lwh] (D) -- (B)
+        \draw[myred, line width=\lwh] (A) -- (B)
+
+        \node[below left] at (C) {\slet{C}}
+        \node[above left] at (A) {\slet{A}}
+        \node[above right] at (B) {\slet{B}}
+        \node[below right] at (D) {\slet{D}}
+    }
+        
+    
+\end{minipage}
+
+\end{document}
